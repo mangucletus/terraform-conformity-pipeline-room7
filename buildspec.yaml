@@ -1,0 +1,63 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo "Installing Terraform..."
+      - wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+      - unzip terraform_1.6.0_linux_amd64.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
+      - echo "Installing Conformity CLI..."
+      - pip install conformity-cli
+      
+  pre_build:
+    commands:
+      - echo "Initializing Terraform..."
+      - terraform init
+      - echo "Validating Terraform configuration..."
+      - terraform validate
+      - echo "Running Terraform plan..."
+      - terraform plan -out=tfplan
+      
+  build:
+    commands:
+      - echo "Running Conformity Template Scanner..."
+      - |
+        # Convert Terraform plan to JSON for analysis
+        terraform show -json tfplan > tfplan.json
+        
+        # Run Conformity scan (replace with your API key and region)
+        conformity-cli scan-template \
+          --api-key $CONFORMITY_API_KEY \
+          --region $CONFORMITY_REGION \
+          --template-file tfplan.json \
+          --output-file conformity-results.json
+          
+        # Check if scan passed
+        if [ $? -eq 0 ]; then
+          echo "Conformity scan passed!"
+        else
+          echo "Conformity scan failed! Check conformity-results.json for details"
+          cat conformity-results.json
+          exit 1
+        fi
+        
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
+      - |
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ]; then
+          echo "Applying Terraform configuration..."
+          terraform apply -auto-approve tfplan
+        else
+          echo "Build failed, skipping terraform apply"
+        fi
+
+artifacts:
+  files:
+    - conformity-results.json
+    - tfplan.json
+  name: terraform-conformity-artifacts
