@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "Name of the S3 bucket"
   type        = string
-  default     = "my-terraform-conformity-test-bucket-12345"
+  default     = "group7-terraform-conformity-bucket-2025"
 }
 
 variable "environment" {

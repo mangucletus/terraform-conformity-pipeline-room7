@@ -1,4 +1,3 @@
-# Provider configuration
 terraform {
   required_providers {
     aws = {
@@ -18,7 +17,7 @@ resource "aws_s3_bucket" "example" {
   bucket = var.bucket_name
   
   tags = {
-    Name        = "group7-codebuild-comformity"
+    Name        = "group7-codebuild-conformity"
     Environment = var.environment
   }
 }
@@ -32,4 +31,3 @@ resource "aws_s3_bucket_public_access_block" "example" {
   ignore_public_acls      = false  # Security issue
   restrict_public_buckets = false  # Security issue
 }
-# This will trigger security findings
